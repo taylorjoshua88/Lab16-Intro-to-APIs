@@ -1,65 +1,128 @@
-![cf](http://i.imgur.com/7v5ASc8.png) Lab 16: Intro to APIs
-=====================================
+# ToDoList API
 
-## To Submit this Assignment
-- fork this repository
-- write all of your code in a directory named `lab-#`; + `<your name>` **e.g.** `lab16-amanda`
-- push to your repository
-- submit a pull request to this repository
-- submit a link to your PR in canvas
+**Author**: Joshua Taylor
+**Version**: 1.0.0
 
+## Overview
 
-## Directions
+ToDoList API is a simple RESTful API connected to a backend database which
+allows users to create to-do items, view existing to-do items,
+retrieve all to-do items, and to delete to-do items. All responses are
+provided in JSON format.
 
-1. Watch this video with Daniel Roth [Here](https://binged.it/2v2AXFe) (~60 min)
-1. Read the tutorial located [Here](https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-web-api)
+## Getting Started
 
-Using both of the resources above, create an API in .NET Core that conducts the standard HTTP verbs (Get,Put,Post,Delete) for a "To-Do" list.
-Your "To-Do" list will consist of indivudal tasks that can be saved into the database and extracted as needed. You sould also have the ability to 
-get all of the tasks by a simple get request. 
-<br />
+ToDoList API targets the .NET Core 2.0 platform, ASP.NET Core, Entity
+Framework Core and the MVC Framework. The .NET Core 2.0 SDK can be downloaded 
+from the following URL for Windows, Linux, and macOS:
 
-*Use Postman to test your endpoints.* 
+https://www.microsoft.com/net/download/
 
+Additionally, the Entity Framework tools will need to be installed via the
+NuGet Package Manager Console in order to create a migration for the local,
+development database (run from the solution root):
 
-## ReadMe
-A README is a module consumer's first -- and maybe only -- look into your creation. The consumer wants a module to fulfill their need, so you must explain exactly what need your module fills, and how effectively it does so.
-<br />
-Your job is to
+    Install-Package Microsoft.EntityFrameworkCore.Tools
+	Add-Migration Initial
+	Update-Database
 
-1. tell them what it is (with context)
-2. show them what it looks like in action
-3. show them how they use it
-4. tell them any other relevant details
-<br />
+The dotnet CLI utility would then be used to build and run the application:
 
-This is ***your*** job. It's up to the module creator to prove that their work is a shining gem in the sea of slipshod modules. Since so many developers' eyes will find their way to your README before anything else, quality here is your public-facing measure of your work.
+    cd ToDoList
+    dotnet build
+    dotnet run
 
-<br /> <br /> Refer to the sample-README in the class repo for an example. 
-- [Reference](https://github.com/noffle/art-of-readme)
+The _dotnet run_ command will start an HTTP server on localhost using Kestrel
+which can be accessed by HTTP requests to the defined API endpoints.
 
-## Rubric
-- 7pts: Program meets all requirements described in Lab directions
-**Tests are not required for this lab**
+Additionally, users can build and run ToDoList using Visual Studio
+2017 or greater by opening the solution file at the root of this repository.
+All dependencies are referenced via NuGet and should be brought in during
+the restore process. If this does not occur, the following will download all
+needed dependencies (other than the Entity Framework tools):
 
-	Points  | Reasoning | 
-	 ------------ | :-----------: | 
-	7       | Program runs as expected, no exceptions during execution |
-	5       | Program runs/compiles, Program contains logic/process errors|
-	4       | Program runs/compiles, but throws exceptions during execution |
-	2       | Missing tests // tests are not passing // not enough valid tests |
-	2       | Missing Readme Document // Readme Document does not meet standards |
-	0       | Program does not compile/run. Build Errors // Required naming conventions not met |
-	0       | No Submission |
+    dotnet restore
 
-- 3pts: Code meets industry standards
-	- These points are only awardable if you score at minimum a 5/7 on above criteria
+## Data Model
 
-	Points  | Reasoning | 
-	 ------------ | :-----------: | 
-	3       | Code meets Industry Standards // methods and variables namings are appropriate // Selective and iterative statements are used appropriately, Fundamentals are propertly executed // Clearly and cleanly commented |
-	2       | syntax for naming conventions are not correct (camelCasing and PascalCasing are used appropriately) // slight errors in use of fundamentals // Missing some comments |
-	1       | Inappropriate naming conventions, and/or inappropriate use of fundamentals // Code is not commented  |
-	0       | No Submission or incomplete submission |
+To-do list items are represented in state transfers as a simple JSON object
+containing the following fields:
 
+### id (int)
 
+Primary key for each to-do list item. If included in request body JSON, this
+will need to match the id specified in routing.
+
+### title (string)
+
+A JSON string containing the title of each to-do list item.
+
+### isComplete (bool)
+
+A boolean JSON value representing whether the task has been completed.
+
+## Example JSON Request / Response Body
+
+__Note:__ Remove the "id" field for requests _or_ ensure that this field
+matches with the id provided via routing.
+
+    {
+        "id": 3,
+        "title": "Write README documentation",
+        "isComplete": "false"
+    }
+
+## End-Points
+
+### GET /api/todo
+
+Retrieves all to-do list items stored within the backend database in JSON
+format as an array.
+
+### GET /api/todo/{id:int}
+
+Retrieves the specified to-do list item by its numeric id primary key. A
+successful response can be identified with code 200 with the requested item
+in the response body in JSON format.
+
+### POST /api/todo
+
+Adds a new to-do list item using the JSON provided in the request body. Will
+return code 201 on successful item creation along with the new item in the
+response body in JSON format.
+
+### PUT /api/todo/{id:int}
+
+Updates the to-do list item with a numeric id primary key matching the id
+passed from routing using the JSON representational state provided in the
+request body. This method will update __all__ fields of the existing to-do
+list item specified. Returns an empty 204 response on success per _RFC 2616 Section 10.2.5_.
+
+### DELETE /api/todo/{id:int}
+
+Deletes the existing to-do list item with the numeric id primary key matching
+the id provided in routing. Provides an empty 204 response on success.
+
+## Architecture
+
+### TodoController
+
+_TodoController_ provides all of the API logic for each of the above
+documented API endpoints. TodoController obtains its database context
+through dependency injection.
+
+### TodoItem
+
+TodoItem corresponds to the code-side representation of a to-do list
+item described in the _Data Model_ section of this document. This
+class is used for code-first migrations to the API's backend database
+through the Entity Framework migration tools.
+
+    public int Id           // Primary Key
+    public string Title     // "title" from JSON
+    public bool IsComplete  // "isComplete" from JSON
+
+## Change Log
+
+* 4.10.2018 [Joshua Taylor](mailto:taylor.joshua88@gmail.com) - Initial
+release.
